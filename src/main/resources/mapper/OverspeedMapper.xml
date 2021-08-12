@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.zkml.api.warning.dao.OverspeedDao" >
+
+    <select id="getOverSpeedResult" parameterType="Map" resultType="java.util.Map">
+        select car_no,count(*) as cnt from tb_overspeed_info where psign = #{psign} and organ_no = #{organno}
+        and begin_time &gt;= #{startTime} and begin_time &lt;= #{endTime} and logic_delete = 0
+        <if test="carno != null ">
+            and car_no in
+            <foreach collection="carno" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        group by car_no order by cnt desc
+        <if test="export != 1 ">
+            limit #{offset},#{size}
+        </if>
+    </select>
+
+    <select id="getOverSpeedTotalCnt" parameterType="Map" resultType="Integer">
+        select count(*) as cnt from tb_overspeed_info where psign = #{psign} and organ_no = #{organno}
+        and begin_time &gt;= #{startTime} and begin_time &lt;= #{endTime} and logic_delete = 0
+        <if test="carno != null ">
+            and car_no in
+            <foreach collection="carno" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="getOverSpeedPage" parameterType="Map" resultType="String">
+        select car_no from tb_overspeed_info where psign = #{psign} and organ_no = #{organno}
+        and begin_time &gt;= #{startTime} and begin_time &lt;= #{endTime} and logic_delete = 0
+        <if test="carno != null ">
+            and car_no in
+            <foreach collection="carno" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        group by car_no
+    </select>
+
+    <select id="getOverSpeedDetail" parameterType="Map" resultType="com.zkml.api.warning.entity.OverspeedEntity">
+        SELECT id,car_no,begin_address,begin_time,end_address,end_time,speed,warn_seconds,max_speed,max_time FROM tb_overspeed_info
+        WHERE psign = #{psign} and organ_no = #{organno} and begin_time &gt;= #{startTime} and begin_time &lt;= #{endTime} and logic_delete = 0
+        <if test="carno != null ">
+            and car_no in
+            <foreach collection="carno" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="warnseconds != null ">
+            and warn_seconds >= #{warnseconds}
+        </if>
+        order by begin_time desc
+        <if test="export != 1 ">
+            limit #{offset},#{size}
+        </if>
+    </select>
+
+    <select id="getOverSpeedDetailPage" parameterType="Map" resultType="Integer">
+        SELECT count(*) FROM tb_overspeed_info
+        WHERE psign = #{psign} and organ_no = #{organno} and begin_time &gt;= #{startTime} and begin_time &lt;= #{endTime} and logic_delete = 0
+        <if test="carno != null ">
+            and car_no in
+            <foreach collection="carno" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="warnseconds != null ">
+            and warn_seconds >= #{warnseconds}
+        </if>
+    </select>
+
+    <select id="getOverSpeedCount" parameterType="Map" resultType="Integer">
+        SELECT count(*) FROM tb_overspeed_info
+        WHERE begin_time &gt;= #{starttime} and begin_time &lt;= #{endtime} and logic_delete = 0
+        and car_no in
+        <foreach collection="carno" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and organ_no in
+        <foreach collection="organno" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+</mapper>

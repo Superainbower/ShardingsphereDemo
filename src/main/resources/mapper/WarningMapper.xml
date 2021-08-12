@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.zkml.api.warning.dao.WarningDao" >
+
+    <select id="findRtaResult" parameterType="Map" resultType="java.util.Map">
+        select carno,sum(type1) as type1,sum(type2) as type2 from (
+        select carno,ifnull(sum(case when type = '1' then cnt end),0) as type1,ifnull(sum(case when type = '2' then cnt
+        end),0) as type2 from(
+        select car_no as carno,type,count(*) as cnt from tb_warning_info where organ_no = #{organno} and
+        begin_time &gt;= #{startTime} and begin_time &lt;= #{endTime} and logic_delete = 0
+        <choose>
+            <when test="status != 1">
+                and type = '1'
+            </when>
+            <otherwise>
+                and type in ('1','2')
+            </otherwise>
+        </choose>
+        <if test="carno != null ">
+            and car_no in
+            <foreach collection="carno" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="idcard != null ">
+            and id_card in
+            <foreach collection="idcard" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="type != null ">
+            and appeal_status IN
+            <foreach collection="type" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="warnseconds != null ">
+            and warn_seconds >= #{warnseconds}
+        </if>
+        <if test="miles != null ">
+            and miles >= #{miles}
+        </if>
+        group by car_no,type) a group by carno
+        ) b group by carno
+        <if test="export != 1 ">
+            limit #{offset},#{size}
+        </if>
+    </select>
+
+    <select id="getCountRtaResult" parameterType="Map" resultType="java.util.Map">
+        SELECT sum(type1) as type1cnt,sum(type2) as type2cnt from (
+        select carno,ifnull(sum(case when type = '1' then cnt end),0) as type1,ifnull(sum(case when type = '2' then cnt end),0) as type2 from(
+        select car_no as carno,type,count(*) as cnt from tb_warning_info where organ_no = #{organno} and
+        begin_time &gt;= #{startTime} and begin_time &lt;= #{endTime} and logic_delete = 0
+        <choose>
+            <when test="status != 1">
+                and type = '1'
+            </when>
+            <otherwise>
+                and type in ('1','2')
+            </otherwise>
+        </choose>
+        <if test="carno != null ">
+            and car_no in
+            <foreach collection="carno" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="idcard != null ">
+            and id_card in
+            <foreach collection="idcard" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="type != null ">
+            and appeal_status IN
+            <foreach collection="type" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="warnseconds != null ">
+            and warn_seconds >= #{warnseconds}
+        </if>
+        <if test="miles != null ">
+            and miles >= #{miles}
+        </if>
+        group by car_no,type) a group by carno
+        <if test="export != 1 ">
+            limit #{offset},#{size}
+        </if>
+        ) a
+    </select>
+
+    <select id="getTotalRtaResult"  parameterType="Map" resultType="String">
+        select car_no from tb_warning_info where organ_no = #{organno} and
+        begin_time &gt;= #{startTime} and begin_time &lt;= #{endTime} and logic_delete = 0
+        <choose>
+            <when test="status != 1">
+                and type = '1'
+            </when>
+            <otherwise>
+                and type in ('1','2')
+            </otherwise>
+        </choose>
+        <if test="carno != null ">
+            and car_no in
+            <foreach collection="carno" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="idcard != null ">
+            and id_card in
+            <foreach collection="idcard" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="type != null ">
+            and appeal_status IN
+            <foreach collection="type" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="warnseconds != null ">
+            and warn_seconds >= #{warnseconds}
+        </if>
+        <if test="miles != null ">
+            and miles >= #{miles}
+        </if>
+        group by car_no
+    </select>
+
+    <update id="deleteRtaAlarm" >
+        update tb_warning_info
+        <set>
+          logic_delete = 1
+        </set>
+        where id in
+        <foreach item="item" index="index" collection="id" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and begin_time &gt;= #{startTime} and begin_time &lt;= #{endTime}
+    </update>
+
+    <update id="setApplySN">
+        update tb_warning_info set apply_sn = #{applySN},appeal_status = #{appealStatus},order_id = #{orderId},deploy_sign = #{deploySign} where car_no in
+        <foreach collection="carnoList" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and logic_delete = 0 and appeal_status = 0 and begin_time &gt;= #{startTime} and begin_time &lt;= #{endTime} and end_time &lt;= #{endTime}
+    </update>
+
+    <select id="getRtaAlarm" parameterType="Map" resultType="java.util.Map">
+        select car_no,count(*) as cnt from tb_warning_info where organ_no = #{organno} and  begin_time &gt; #{startTime} and begin_time &lt; #{endTime} and logic_delete = 0
+        and type = '1'and car_no in
+        <foreach collection="carno" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        <if test="type != null ">
+            and appeal_status IN
+            <foreach collection="type" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="warnseconds != null ">
+            and warn_seconds >= #{warnseconds}
+        </if>
+        <if test="miles != null ">
+            and miles >= #{miles}
+        </if>
+        group by car_no
+    </select>
+
+    <select id="getWarningStatisticsByCar" parameterType="Map" resultType="java.util.Map">
+        select car_no,count(car_no) as cnt,sum(case when appeal_status = '0' then 1 else 0 end) as nodeal,sum(case when
+        appeal_status = '0' then 0 else 1 end) as deal, sum(yellow) as yellow, sum(red) as red from
+        tb_warning_info where begin_time &gt;= #{startday} and begin_time &lt;= #{endday} and logic_delete = 0
+        and car_no in
+        <foreach collection="carno" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and organ_no = #{organno}
+        and type in
+        <foreach collection="type" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        group by car_no order by cnt desc
+        <if test="export != 1 ">
+            limit #{offset},#{size}
+        </if>
+    </select>
+
+    <select id="getWarningStatisticsByCarPage" parameterType="Map" resultType="String">
+        select car_no from tb_warning_info where begin_time &gt;= #{startday} and begin_time &lt;= #{endday} and
+        logic_delete = 0
+        and car_no in
+        <foreach collection="carno" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and organ_no = #{organno}
+        and type in
+        <foreach collection="type" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        group by car_no
+    </select>
+
+    <select id="getWarningStatisticsByCarTotal" parameterType="Map" resultType="java.util.Map">
+        select count(car_no) as allCnt,sum(case when appeal_status = '0' then 1 else 0 end) as allNodeal,sum(case when
+        appeal_status = '0' then 0 else 1 end) as deal, sum(yellow) as allYellow, sum(red) as allRed from
+        tb_warning_info where begin_time &gt;= #{startday} and begin_time &lt;= #{endday} and logic_delete = 0
+        and car_no in
+        <foreach collection="carno" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and organ_no = #{organno}
+        and type in
+        <foreach collection="type" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="getWarningStatisticsByOrgan" parameterType="Map" resultType="java.util.Map">
+        select organ_no,count(organ_no) as cnt,sum(case when appeal_status = '0' then 1 else 0 end) as nodeal,sum(case
+        when appeal_status = '0' then 0 else 1 end) as deal,sum(yellow) as yellow, sum(red) as red from
+        tb_warning_info where begin_time &gt;= #{startday} and begin_time &lt;= #{endday} and logic_delete = 0
+        and organ_no in
+        <foreach collection="organno" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        <if test="carno != null ">
+            and car_no in
+            <foreach collection="carno" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        and type in
+        <foreach collection="type" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        group by organ_no order by cnt desc
+        <if test="export != 1 ">
+            limit #{offset},#{size}
+        </if>
+    </select>
+
+    <select id="getWarningStatisticsByOrganPage" parameterType="Map" resultType="String">
+        select organ_no from tb_warning_info where begin_time &gt;= #{startday} and begin_time &lt;=
+        #{endday} and logic_delete = 0
+        and organ_no in
+        <foreach collection="organno" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        <if test="carno != null ">
+            and car_no in
+            <foreach collection="carno" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        and type in
+        <foreach collection="type" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        group by organ_no
+    </select>
+
+    <select id="getWarningStatisticsByOrganTotal" parameterType="Map" resultType="java.util.Map">
+        select count(organ_no) as allCnt,sum(case when appeal_status = '0' then 1 else 0 end) as allNodeal,sum(case
+        when appeal_status = '0' then 0 else 1 end) as allDeal,sum(yellow) as allYellow, sum(red) as allRed from
+        tb_warning_info where begin_time &gt;= #{startday} and begin_time &lt;= #{endday} and logic_delete = 0
+        and organ_no in
+        <foreach collection="organno" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        <if test="carno != null ">
+            and car_no in
+            <foreach collection="carno" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        and type in
+        <foreach collection="type" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="getWarningStatisticsNodeal" parameterType="Map" resultType="Integer">
+        select count(*) as cnt from
+        tb_warning_info where begin_time &gt;= #{startday} and begin_time &lt;= #{endday} and logic_delete = 0 and appeal_status = '0'
+        <if test="organno != null ">
+            and organ_no in
+            <foreach collection="organno" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="carno != null ">
+            and car_no in
+            <foreach collection="carno" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        and type in
+        <foreach collection="type" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="getWarningStatisticsDetail" parameterType="Map" resultType="java.util.Map">
+        select id,organ_no,car_no,type,DATE_FORMAT(begin_time,'%Y-%m-%d %H:%i:%s') as begin_time,DATE_FORMAT(end_time,'%Y-%m-%d %H:%i:%s') as end_time,begin_address,
+        end_address,warn_seconds,miles,appeal_status,apply_sn,msg_status,order_id,deploy_sign from tb_warning_info
+        where begin_time &gt;= #{startday} and begin_time &lt;= #{endday}
+        <if test="carno != null ">
+            and car_no in
+            <foreach collection="carno" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="organno != null ">
+            and organ_no in
+            <foreach collection="organno" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        and type in
+        <foreach collection="type" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        <if test="appealstatus != null ">
+            and appeal_status in
+            <foreach collection="appealstatus" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="applysn != null ">
+            and apply_sn = #{applysn}
+        </if>
+        <if test="miles != null ">
+            and miles &gt;= #{miles}
+        </if>
+        <if test="warnseconds != null ">
+            and warn_seconds &gt;= #{warnseconds}
+        </if>
+        <if test="msgstatus != null ">
+            and msg_status = #{msgstatus}
+        </if>
+        <choose>
+            <when test="status != 1">
+                and red = 1
+            </when>
+            <otherwise>
+                and yellow = 1
+            </otherwise>
+        </choose>
+        and logic_delete = 0
+        order by begin_time desc
+        <if test="export != 1 ">
+            limit #{offset},#{size}
+        </if>
+    </select>
+
+    <select id="getWarningStatisticsDetailPage" parameterType="Map" resultType="Integer">
+        select count(*) from tb_warning_info where begin_time &gt;= #{startday} and begin_time &lt;= #{endday}
+        <if test="carno != null ">
+            and car_no in
+            <foreach collection="carno" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="organno != null ">
+            and organ_no in
+            <foreach collection="organno" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        and type in
+        <foreach collection="type" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        <if test="appealstatus != null ">
+            and appeal_status in
+            <foreach collection="appealstatus" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="applysn != null ">
+            and apply_sn = #{applysn}
+        </if>
+        <if test="miles != null ">
+            and miles &gt;= #{miles}
+        </if>
+        <if test="warnseconds != null ">
+            and warn_seconds &gt;= #{warnseconds}
+        </if>
+        <if test="msgstatus != null ">
+            and msg_status = #{msgstatus}
+        </if>
+        <choose>
+            <when test="status != 1">
+                and red = 1
+            </when>
+            <otherwise>
+                and yellow = 1
+            </otherwise>
+        </choose>
+        and logic_delete = 0
+    </select>
+</mapper>

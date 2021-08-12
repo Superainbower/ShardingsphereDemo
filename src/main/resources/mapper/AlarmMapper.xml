@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.zkml.api.warning.dao.AlarmDao" >
+
+    <resultMap id="BaseResultMap" type="com.zkml.api.warning.entity.BaojingEntity" >
+    </resultMap>
+
+    <select id="getList" parameterType="Map" resultMap="BaseResultMap">
+        select id,carno,content,daq_time,latitude,longitude,organno,qy_id,status,type,address,idcard ,end_time,dispose_content as opinion,dispose_time as dealtime,dispose_idcard as person,msg_status from ${table} where
+        daq_time &gt;= #{startTime} and daq_time &lt;= #{endTime}
+        <choose>
+            <when test="useIdCard == true">
+                and idcard  in
+                <foreach item="item" index="index" collection="idcardList" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </when>
+            <otherwise>
+                <if test="carnoList != null ">
+                    and carno in
+                    <foreach collection="carnoList" item="item" index="index" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="organList != null ">
+                    and organno in
+                    <foreach collection="organList" item="item" index="index" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="nocarnolist != null ">
+                    and carno not in
+                    <foreach collection="nocarnolist" item="item" index="index" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="alarmType != null ">
+                    and content in
+                    <foreach collection="alarmType" item="item" open="(" close=")" separator=",">
+                        #{item}
+                    </foreach>
+                </if>
+            </otherwise>
+        </choose>
+        and type in
+        <foreach item="item" index="index" collection="typeList" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        order by daq_time DESC
+        <if test="export != 1 ">
+            limit #{offset},#{size}
+        </if>
+    </select>
+
+    <select id="getCnt" parameterType="Map" resultType="Integer">
+        select count(*) from ${table} where
+        daq_time &gt;= #{startTime} and daq_time &lt;= #{endTime}
+        <choose>
+            <when test="useIdCard == true">
+                and idcard  in
+                <foreach item="item" index="index" collection="idcardList" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </when>
+            <otherwise>
+                <if test="carnoList != null ">
+                    and carno in
+                    <foreach collection="carnoList" item="item" index="index" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="organList != null ">
+                    and organno in
+                    <foreach collection="organList" item="item" index="index" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="nocarnolist != null ">
+                    and carno not in
+                    <foreach collection="nocarnolist" item="item" index="index" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="alarmType != null ">
+                    and content in
+                    <foreach collection="alarmType" item="item" open="(" close=")" separator=",">
+                        #{item}
+                    </foreach>
+                </if>
+            </otherwise>
+        </choose>
+        and type in
+        <foreach item="item" index="index" collection="typeList" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        <if test="status != null">
+            and status = -1
+        </if>
+    </select>
+
+    <select id="getPositionList" parameterType="Map" resultMap="BaseResultMap">
+        select id,carno,content,daq_time,end_time,latitude,longitude,organno,qy_id,type,address,idcard,status,person,dealtime,opinion,create_time from vbox_baojing_position where
+        daq_time &gt;= #{startTime} and daq_time &lt;= #{endTime}
+        <if test="organList != null ">
+            and organno in
+            <foreach collection="organList" item="item" index="index" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="carnoList != null ">
+            and carno in
+            <foreach collection="carnoList" item="item" index="index" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="carno != null ">
+            and carno like concat("%",#{carno},"%")
+        </if>
+        <if test="status != null">
+            and status = #{status}
+        </if>
+        and type = #{type}
+        order by create_time DESC
+        <if test="export != 1 ">
+            limit #{offset},#{size}
+        </if>
+    </select>
+
+    <select id="getPositionCnt" parameterType="Map" resultType="Integer">
+        select count(*) from vbox_baojing_position where daq_time &gt;= #{startTime} and daq_time &lt;= #{endTime}
+        <if test="organList != null ">
+            and organno in
+            <foreach collection="organList" item="item" index="index" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="carnoList != null ">
+            and carno in
+            <foreach collection="carnoList" item="item" index="index" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="carno != null ">
+            and carno like concat("%",#{carno},"%")
+        </if>
+        <if test="status != null">
+            and status = #{status}
+        </if>
+        and type = #{type}
+    </select>
+
+    <update id="dealAlarm">
+        update vbox_baojing_position
+        <set>
+            person = #{person},
+            dealtime = #{dealtime},
+            opinion = #{opinion},
+            status = '已处理',
+        </set>
+        where id = #{id} and daq_time &gt;= #{daqtime} and daq_time &lt;= #{daqtime}
+    </update>
+
+    <update id="dealfenceAlarm">
+        update ${table}
+        <set>
+            dispose_idcard = #{person},
+            dispose_time = #{dealtime},
+            dispose_content = #{opinion},
+            status = 1,
+        </set>
+        where id = #{id} and daq_time &gt;= #{daqtime} and daq_time &lt;= #{daqtime}
+    </update>
+
+    <update id="setTerminalResult">
+        update ${table} set msg_status = 1 where id = #{id} and daq_time &gt;= #{daqtime} and daq_time &lt;= #{daqtime}
+    </update>
+
+    <select id="findTerminalAlarm" parameterType="Map" resultType="java.util.Map">
+        select a.id,a.carno,case when a.content = '*7*' then '电量不足' else '终端异常' end as alarmtype,b.alarmcontent,a.terminalId ,a.daq_time,a.address,a.msg_status from (
+        select a.*,b.TerminalID as terminalId from (select a.id,a.carno,a.content,a.daq_time,a.address,a.msg_status from (
+        select * from ${table} where daq_time &gt; #{startTime} and daq_time &lt; #{endTime} and organno = #{organno}
+        <if test="carno != null ">
+            and carno in
+            <foreach collection="carno" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="content != null ">
+            and content in
+            <foreach collection="content" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        and type = '2' ) a INNER JOIN (
+        select carno,max(daq_time) as daq_time,max(id) as id  from ${table} where daq_time &gt; #{startTime} and daq_time &lt; #{endTime} and organno = #{organno}
+        <if test="carno != null ">
+            and carno in
+            <foreach collection="carno" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="content != null ">
+            and content in
+            <foreach collection="content" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        and type = '2' GROUP BY carno
+        ) b on a.carno = b.carno and a.daq_time = b.daq_time and a.id = b.id) a inner join tb_tvmapping b on a.carno = b.CarID where b.logicdelete = 0
+        and (b.terminal_connect_type = 1 or ( b.terminal_connect_type = 2 and a.content not in ('*7*','*8*')))
+        ) a inner join tb_alarm_type_new b on a.content = b.alarmtype order by a.msg_status asc,a.daq_time desc limit ${offset},${size}
+    </select>
+
+    <select id="getCountTerminalAlarm" parameterType="Map" resultType="Integer">
+        select count(*) from (
+        select a.id,a.carno,case when a.content = '*7*' then '电量不足' else '终端异常' end as alarmtype,b.alarmcontent,a.TerminalID,a.daq_time,a.address,a.msg_status from (
+        select a.*,b.TerminalID from (select a.id,a.carno,a.content,a.daq_time,a.address,a.msg_status from (
+        select * from ${table} where daq_time &gt; #{startTime} and daq_time &lt; #{endTime} and organno = #{organno}
+        <if test="carno != null ">
+            and carno in
+            <foreach collection="carno" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="content != null ">
+            and content in
+            <foreach collection="content" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        and type = '2' ) a INNER JOIN (
+        select carno,max(daq_time) as daq_time,max(id) as id  from ${table} where daq_time &gt; #{startTime} and daq_time &lt; #{endTime} and organno = #{organno}
+        <if test="carno != null ">
+            and carno in
+            <foreach collection="carno" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="content != null ">
+            and content in
+            <foreach collection="content" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        and type = '2' GROUP BY carno
+        ) b on a.carno = b.carno and a.daq_time = b.daq_time and a.id = b.id) a inner join tb_tvmapping b on a.carno = b.CarID where b.logicdelete = 0
+        and (b.terminal_connect_type = 1 or ( b.terminal_connect_type = 2 and a.content not in ('*7*','*8*')))
+        ) a inner join tb_alarm_type_new b on a.content = b.alarmtype) a
+    </select>
+
+    <select id="findTerminalResult" parameterType="Map" resultType="java.util.Map">
+        SELECT carno,case content when '*2*' then '1' else '2' end as con,
+        count(*) as cnt from ${table} where daq_time &gt;= #{startTime} and daq_time &lt;= #{endTime} and content in
+        <foreach collection="typeList" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and organno = #{organno}
+        <if test="carno != null ">
+            and carno in
+            <foreach collection="carno" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        GROUP BY carno,con
+        <if test="export != 1 ">
+            limit #{offset},#{size}
+        </if>
+    </select>
+
+    <select id="getTermianlCount" parameterType="Map" resultType="Integer">
+        select count(*) from ${table} where daq_time &gt;= #{starttime} and daq_time &lt;= #{endtime}
+        and organno in
+        <foreach collection="organno" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and carno in
+        <foreach collection="carno" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and content in ('*2*','*4*','*5*','*6*','*7*','*8*','拔出报警','插入报警')
+    </select>
+
+    <select id="getFenceCount" parameterType="Map" resultType="Integer">
+        select count(id) from ${table} where daq_time &gt;= #{starttime} and daq_time &lt;= #{endtime}
+        and organno in
+        <foreach collection="organno" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and carno in
+        <foreach collection="carno" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and type in ('5','6','7')
+    </select>
+
+</mapper>

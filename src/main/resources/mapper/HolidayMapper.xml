@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.zkml.api.warning.dao.HolidayDao" >
+
+    <select id="getHolidayApplySN" parameterType="Map" resultType="java.util.Map">
+        select id,apply_sn_str from tb_holiday_car_day where carid in
+        <foreach collection="carnoList" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach> and begintime &gt;= #{startTime} and begintime &lt;= #{endTime} and endtime &lt;= #{endTime} and ((apply_status = '0') or (apply_status = '1' and apply_sn_str is null))
+    </select>
+
+    <update id="setHolidayApplySN" parameterType="Map">
+        update tb_holiday_car_day
+        set apply_sn_str = #{apply_sn_str},apply_status = #{apply_status} where id = #{id} and
+         begintime &gt;= #{startTime} and begintime &lt;= #{endTime} and endtime &lt;= #{endTime}
+    </update>
+
+</mapper>

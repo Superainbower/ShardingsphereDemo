@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.zkml.api.warning.dao.FatigueDao" >
+
+    <select id="getDrivingCount" parameterType="Map" resultType="Integer">
+        SELECT count(*) FROM tb_fatigue_driving_warning where begin_time &gt;= #{starttime} and end_time &lt;= #{endtime} and logic_delete = 0
+        and organ_no in
+        <foreach collection="organno" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and car_no in
+        <foreach collection="carno" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+</mapper>

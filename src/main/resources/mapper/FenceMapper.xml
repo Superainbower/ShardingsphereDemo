@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.zkml.api.warning.dao.FenceDao" >
+
+    <select id="findNameByfenceId" parameterType="String" resultType="String">
+        select name from tb_fence_info where fenceId = #{fenceId}
+    </select>
+
+</mapper>

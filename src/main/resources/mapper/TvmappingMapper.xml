@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.zkml.api.warning.dao.TvmappingDao" >
+
+    <select id="findAreaIdAndidcardByCarIds"  parameterType="List" resultType="java.util.Map">
+        select areaid,idcard from tb_tvmapping where CarID in
+        <foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and logicdelete = 0
+    </select>
+
+    <select id="findidcardByOrangList" parameterType="List" resultType="String">
+        select idcard from tb_tvmapping where Company in
+        <foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and logicdelete = 0
+    </select>
+
+    <select id="findByOrganOrCarNos"  parameterType="Map" resultType="java.util.Map">
+        select carid,terminalid,areaid from tb_tvmapping where logicdelete = 0
+        <if test="organList!=null ">
+            and Company in
+            <foreach collection="organList" item="item" separator="," open="(" close=")" >
+                #{item}
+            </foreach>
+        </if>
+        <if test="carnoList!=null ">
+            andCarID in
+            <foreach collection="carnoList" item="item" separator="," open="(" close=")" >
+                #{item}
+            </foreach>
+        </if>
+    </select>
+</mapper>
